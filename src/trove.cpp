@@ -15,26 +15,26 @@ size_t Trove_GetFSIteratorSize()
     return sizeof(Trove_FSIterator_private);
 }
 
-static bool IsSkippableFile(HTrove_FSIterator fs_iterator)
+static int IsSkippableFile(HTrove_FSIterator fs_iterator)
 {
     const char* p = fs_iterator->m_FindData.cFileName;
     if ((*p++) != '.')
     {
-        return false;
+        return 0;
     }
     if ((*p) == '\0')
     {
-        return true;
+        return 1;
     }
     if ((*p++) != '.')
     {
-        return false;
+        return 0;
     }
     if ((*p) == '\0')
     {
-        return true;
+        return 1;
     }
-    return false;
+    return 0;
 }
 
 static int Skip(HTrove_FSIterator fs_iterator)
@@ -115,14 +115,14 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
     return (HTroveOpenWriteFile)handle;
 }
 
-bool Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
+int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
 {
     HANDLE h = (HANDLE)(handle);
     ::SetFilePointer(h, (LONG)offset, 0, FILE_BEGIN);
     return TRUE == ::ReadFile(h, output, (LONG)length, 0, 0);
 }
 
-bool Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input)
+int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input)
 {
     HANDLE h = (HANDLE)(handle);
     ::SetFilePointer(h, (LONG)offset, 0, FILE_BEGIN);
@@ -165,6 +165,7 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
 #include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct Trove_FSIterator_private
 {
@@ -177,26 +178,26 @@ size_t Trove_GetFSIteratorSize()
     return sizeof(Trove_FSIterator_private);
 }
 
-static bool IsSkippableFile(HTrove_FSIterator fs_iterator)
+static int IsSkippableFile(HTrove_FSIterator fs_iterator)
 {
     const char* p = fs_iterator->m_DirEntry->d_name;
     if ((*p++) != '.')
     {
-        return false;
+        return 0;
     }
     if ((*p) == '\0')
     {
-        return true;
+        return 1;
     }
     if ((*p++) != '.')
     {
-        return false;
+        return 0;
     }
     if ((*p) == '\0')
     {
-        return true;
+        return 1;
     }
-    return false;
+    return 0;
 }
 
 static int Skip(HTrove_FSIterator fs_iterator)
@@ -261,6 +262,53 @@ const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator)
         return 0;
     }
     return fs_iterator->m_DirEntry->d_name;
+}
+
+HTroveOpenReadFile Trove_OpenReadFile(const char* path)
+{
+    FILE* f = fopen(path, "rb");
+    return (HTroveOpenReadFile)f;
+}
+
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
+{
+    FILE* f = fopen(path, "wb");
+    return (HTroveOpenWriteFile)f;
+}
+
+int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
+{
+    FILE* f = (FILE*)handle;
+    fseek(f, (int)offset, SEEK_SET);
+    size_t read = fread(output, (size_t)length, 1, f);
+    return read == 1u;
+}
+
+int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input)
+{
+    FILE* f = (FILE*)handle;
+    fseek(f, (int)offset, SEEK_SET);
+    size_t written = fwrite(input, (size_t)length, 1, f);
+    return written == 1u;
+}
+
+uint64_t Trove_GetFileSize(HTroveOpenReadFile handle)
+{
+    FILE* f = (FILE*)handle;
+    fseek(f, 0, SEEK_END);
+    return (uint64_t)ftell(f);
+}
+
+void Trove_CloseReadFile(HTroveOpenReadFile handle)
+{
+    FILE* f = (FILE*)handle;
+    fclose(f);
+}
+
+void Trove_CloseWriteFile(HTroveOpenWriteFile handle)
+{
+    FILE* f = (FILE*)handle;
+    fclose(f);
 }
 
 const char* Trove_ConcatPath(const char* folder, const char* file)

@@ -16,5 +16,12 @@ const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator);
 typedef struct Trove_OpenReadFile_private* HTroveOpenReadFile;
 typedef struct Trove_OpenWriteFile_private* HTroveOpenWriteFile;
 
+HTroveOpenReadFile Trove_OpenReadFile(const char* path);
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path);
+int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output);
+int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input);
+uint64_t Trove_GetFileSize(HTroveOpenReadFile handle);
+void Trove_CloseReadFile(HTroveOpenReadFile handle);
+void Trove_CloseWriteFile(HTroveOpenWriteFile handle);
 // Not sure about doing memory allocation here...
 const char* Trove_ConcatPath(const char* folder, const char* file);
