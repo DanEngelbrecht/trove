@@ -32,3 +32,13 @@ TEST(Nadir, IterateFolder)
         Trove_CloseFind(iterator);
     }
 }
+
+TEST(Nadir, ReadFile)
+{
+
+}
+
+TEST(Nadir, WriteFile)
+{
+    
+}

@@ -158,3 +158,119 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
 }
 
 #endif
+
+#ifdef __APPLE__
+
+#include <sys/types.h>
+#include <dirent.h>
+#include <string.h>
+#include <stdlib.h>
+
+struct Trove_FSIterator_private
+{
+    DIR* m_DirStream;
+    struct dirent * m_DirEntry;
+};
+
+size_t Trove_GetFSIteratorSize()
+{
+    return sizeof(Trove_FSIterator_private);
+}
+
+static bool IsSkippableFile(HTrove_FSIterator fs_iterator)
+{
+    const char* p = fs_iterator->m_DirEntry->d_name;
+    if ((*p++) != '.')
+    {
+        return false;
+    }
+    if ((*p) == '\0')
+    {
+        return true;
+    }
+    if ((*p++) != '.')
+    {
+        return false;
+    }
+    if ((*p) == '\0')
+    {
+        return true;
+    }
+    return false;
+}
+
+static int Skip(HTrove_FSIterator fs_iterator)
+{
+    while (IsSkippableFile(fs_iterator))
+    {
+        fs_iterator->m_DirEntry = readdir(fs_iterator->m_DirStream);
+        if (fs_iterator->m_DirEntry == 0)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path)
+{
+    fs_iterator->m_DirStream = opendir(path);
+    if (0 == fs_iterator->m_DirStream)
+    {
+        return 0;
+    }
+
+    fs_iterator->m_DirEntry = readdir(fs_iterator->m_DirStream);
+    if (fs_iterator->m_DirEntry == 0)
+    {
+        closedir(fs_iterator->m_DirStream);
+        return 0;
+    }
+    return Skip(fs_iterator);
+}
+
+int Trove_FindNext(HTrove_FSIterator fs_iterator)
+{
+    fs_iterator->m_DirEntry = readdir(fs_iterator->m_DirStream);
+    if (fs_iterator->m_DirEntry == 0)
+    {
+        return 0;
+    }
+    return Skip(fs_iterator);
+}
+
+void Trove_CloseFind(HTrove_FSIterator fs_iterator)
+{
+    closedir(fs_iterator->m_DirStream);
+    fs_iterator->m_DirStream = 0;
+}
+
+const char* Trove_GetFileName(HTrove_FSIterator fs_iterator)
+{
+    if (fs_iterator->m_DirEntry->d_type != DT_DIR)
+    {
+        return 0;
+    }
+    return fs_iterator->m_DirEntry->d_name;
+}
+
+const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator)
+{
+    if (fs_iterator->m_DirEntry->d_type != DT_REG)
+    {
+        return 0;
+    }
+    return fs_iterator->m_DirEntry->d_name;
+}
+
+const char* Trove_ConcatPath(const char* folder, const char* file)
+{
+    size_t path_len = strlen(folder) + 1 + strlen(file) + 1;
+    char* path = (char*)malloc(path_len);
+    strcpy(path, folder);
+    strcat(path, "/");
+    strcat(path, file);
+    return path;
+}
+
+#endif

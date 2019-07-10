@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct Trove_FSIterator_private* HTrove_FSIterator;
 
