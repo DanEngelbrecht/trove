@@ -180,6 +180,11 @@ size_t Trove_GetFSIteratorSize()
 
 static int IsSkippableFile(HTrove_FSIterator fs_iterator)
 {
+    if ((fs_iterator->m_DirEntry->d_type != DT_DIR) &&
+        (fs_iterator->m_DirEntry->d_type != DT_REG))
+    {
+        return 0;
+    }
     const char* p = fs_iterator->m_DirEntry->d_name;
     if ((*p++) != '.')
     {
@@ -248,7 +253,7 @@ void Trove_CloseFind(HTrove_FSIterator fs_iterator)
 
 const char* Trove_GetFileName(HTrove_FSIterator fs_iterator)
 {
-    if (fs_iterator->m_DirEntry->d_type != DT_DIR)
+    if (fs_iterator->m_DirEntry->d_type != DT_REG)
     {
         return 0;
     }
@@ -257,7 +262,7 @@ const char* Trove_GetFileName(HTrove_FSIterator fs_iterator)
 
 const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator)
 {
-    if (fs_iterator->m_DirEntry->d_type != DT_REG)
+    if (fs_iterator->m_DirEntry->d_type != DT_DIR)
     {
         return 0;
     }

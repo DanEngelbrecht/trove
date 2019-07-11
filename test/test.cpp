@@ -25,7 +25,7 @@ TEST(Nadir, IterateFolder)
             {
                 printf("\nFound file `%s`", filename);
             }
-            else if (const char* dirname = Trove_GetFileName(iterator))
+            else if (const char* dirname = Trove_GetDirectoryName(iterator))
             {
                 printf("\nFound folder `%s`", dirname);
             }
