@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "../third-party/jctest/src/jc_test.h"
 
@@ -38,7 +39,8 @@ TEST(Nadir, ReadFile)
     HTroveOpenReadFile f = Trove_OpenReadFile("find_mvsc.bat");
     ASSERT_NE((HTroveOpenReadFile)0, f);
     uint64_t size = Trove_GetFileSize(f);
-    ASSERT_EQ(1189u, size);
+    ASSERT_GT(2000u, size);
+    ASSERT_LT(1000u, size);
     char buf[512];
     ASSERT_NE(0, Trove_Read(f, 0, 8, buf));
     buf[8] = 0;

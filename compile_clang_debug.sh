@@ -13,4 +13,4 @@ ARCH=-m64
 SRC="src/trove.cpp"
 TEST_SRC="test/main.cpp test/test.cpp"
 
-clang++ -o ./build/test_debug $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc $SRC $TEST_SRC -pthread
+clang++ -o ./build/test_debug $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc $SRC $TEST_SRC
