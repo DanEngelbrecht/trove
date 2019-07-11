@@ -6,7 +6,10 @@ mkdir -p build
 OPT=-O3
 #DISASSEMBLY='-S -masm=intel'
 ASAN=""
-#CXXFLAGS="$CXXFLAGS -Wall -Weverything -pedantic -Wno-zero-as-null-pointer-constant -Wno-old-style-cast -Wno-global-constructors -Wno-padded"
+CXXFLAGS="$CXXFLAGS -Wall -Weverything -pedantic -Wno-zero-as-null-pointer-constant -Wno-old-style-cast -Wno-global-constructors -Wno-padded"
 ARCH=-m64
 
-clang++ -o ./build/test $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc test/test.cpp test/main.cpp src/trove.cpp -pthread
+SRC="src/trove.cpp"
+TEST_SRC="test/main.cpp test/test.cpp"
+
+clang++ -o ./build/test $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc $SRC $TEST_SRC -pthread

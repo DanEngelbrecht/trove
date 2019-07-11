@@ -13,7 +13,12 @@ IF NOT EXIST build (
 
 pushd build
 
-cl.exe /nologo /Zi /DBIKESHED_ASSERTS /D_CRT_SECURE_NO_WARNINGS /D_HAS_EXCEPTIONS=0 /EHsc /W3 /wd5045 /wd4514 /wd4710 /wd4820 /wd4820 /wd4668 /wd4464 /wd5039 /wd4255 /wd4626 ..\test\test.cpp ..\test\main.cpp ..\src\trove.cpp /link  /out:test_debug.exe /pdb:test_debug.pdb
+set OPT=
+set CXXFLAGS=/nologo /Zi /D_CRT_SECURE_NO_WARNINGS /D_HAS_EXCEPTIONS=0 /EHsc /W3 /wd5045 /wd4514 /wd4710 /wd4820 /wd4820 /wd4668 /wd4464 /wd5039 /wd4255 /wd4626
+set SRC=..\src\trove.cpp
+set TEST_SRC=..\test\test.cpp ..\test\main.cpp
+
+cl.exe %CXXFLAGS% %OPT% %SRC% %TEST_SRC% /link /out:test_debug.exe /pdb:test_debug.pdb
 
 popd
 
