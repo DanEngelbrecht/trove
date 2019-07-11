@@ -159,7 +159,7 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
 
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__linux__)
 
 #include <sys/types.h>
 #include <dirent.h>
