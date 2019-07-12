@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set +e
+set -e
 
-sh ./d_clang.sh
+sh ./build/d_clang.sh
 ./output/test_debug
-sh ./r_clang.sh
+sh ./build/r_clang.sh
 ./output/test

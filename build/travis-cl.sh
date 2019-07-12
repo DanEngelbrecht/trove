@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set +e
+set -e
 
-./d_cl.bat
+./build/d_cl.bat
 ./output/test_debug.exe
-./r_cl.bat
+./build/r_cl.bat
 ./output/test.exe
