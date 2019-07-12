@@ -9,6 +9,6 @@ export CXXFLAGS="$CXXFLAGS -Wno-deprecated-register -Wno-deprecated"
 export ARCH="-m64 -maes"
 export OUTPUT=test_debug
 
-. build_src.sh
+. ./build_src.sh
 
 sh build/clang_build.sh
