@@ -36,29 +36,30 @@ TEST(Nadir, IterateFolder)
 
 TEST(Nadir, ReadFile)
 {
-    HTroveOpenReadFile f = Trove_OpenReadFile("find_mvsc.bat");
+    HTroveOpenReadFile f = Trove_OpenReadFile("LICENSE");
     ASSERT_NE((HTroveOpenReadFile)0, f);
     uint64_t size = Trove_GetFileSize(f);
     ASSERT_GT(2000u, size);
     ASSERT_LT(1000u, size);
-    char buf[512];
-    ASSERT_NE(0, Trove_Read(f, 0, 8, buf));
-    buf[8] = 0;
-    ASSERT_EQ(0, strcmp(buf, "echo off"));
+    char buf[12];
+    ASSERT_NE(0, Trove_Read(f, 0, 11, buf));
+    buf[11] = 0;
+    ASSERT_EQ(0, strcmp(buf, "MIT License"));
     Trove_CloseReadFile(f);
 }
 
 TEST(Nadir, WriteFile)
 {
+    const char* test_file_path = Trove_ConcatPath("output", ".test");
     const char* data = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-_";
     {
-        HTroveOpenWriteFile f = Trove_OpenWriteFile(".test");
+        HTroveOpenWriteFile f = Trove_OpenWriteFile(test_file_path);
         ASSERT_NE((HTroveOpenWriteFile)0, f);
         ASSERT_NE(0, Trove_Write(f, 0, 40, data));
         Trove_CloseWriteFile(f);
     }
 
-    HTroveOpenReadFile f = Trove_OpenReadFile(".test");
+    HTroveOpenReadFile f = Trove_OpenReadFile(test_file_path);
     ASSERT_NE((HTroveOpenReadFile)0, f);
     uint64_t size = Trove_GetFileSize(f);
     ASSERT_EQ(40u, size);
@@ -72,4 +73,6 @@ TEST(Nadir, WriteFile)
     ASSERT_EQ(0, strcmp(buf, "ABC"));
 
     Trove_CloseReadFile(f);
+
+    free((char*)test_file_path);
 }

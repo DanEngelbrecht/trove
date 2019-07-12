@@ -2,7 +2,7 @@
 
 set +e
 
-./compile_cl_debug.bat
-./build/test_debug.exe
-./compile_cl.bat
-./build/test.exe
+./d_cl.bat
+./output/test_debug.exe
+./r_cl.bat
+./output/test.exe
