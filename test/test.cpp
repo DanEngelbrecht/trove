@@ -50,7 +50,7 @@ TEST(Nadir, ReadFile)
 
 TEST(Nadir, WriteFile)
 {
-    const char* test_file_path = Trove_ConcatPath("output", ".test");
+    const char* test_file_path = Trove_ConcatPath("build", ".test");
     const char* data = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ,.-_";
     {
         HTroveOpenWriteFile f = Trove_OpenWriteFile(test_file_path);
