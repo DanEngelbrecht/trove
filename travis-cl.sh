@@ -3,7 +3,6 @@
 set -e
 
 ./build.bat
-./output/test_debug.exe
+./build/test_debug.exe
 ./build.bat release
-./output/test.exe
-s
+./build/test.exe

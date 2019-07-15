@@ -3,6 +3,6 @@
 set -e
 
 sh ./build.sh
-./output/test_debug
+./build/test_debug
 sh ./build.sh release
-./output/test
+./build/test
