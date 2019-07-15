@@ -24,6 +24,6 @@ else
     export CXXFLAGS="$CXXFLAGS $CXXFLAGS_DEBUG"
 fi
 
-mkdir -p output
+mkdir -p build
 
-clang++ -o ./output/$OUTPUT $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc $THIRDPARTY_SRC $SRC $TEST_SRC
+clang++ -o ./build/$OUTPUT $OPT $DISASSEMBLY $ARCH -std=c++14 $CXXFLAGS $ASAN -Isrc $THIRDPARTY_SRC $SRC $TEST_SRC

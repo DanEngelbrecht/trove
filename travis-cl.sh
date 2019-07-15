@@ -2,7 +2,8 @@
 
 set -e
 
-./build/d_cl.bat
+./build.bat
 ./output/test_debug.exe
-./build/r_cl.bat
+./build.bat release
 ./output/test.exe
+s

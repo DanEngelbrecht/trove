@@ -2,7 +2,7 @@
 
 set -e
 
-sh ./build/d_clang.sh
+sh ./build.sh
 ./output/test_debug
-sh ./build/r_clang.sh
+sh ./build.sh release
 ./output/test
