@@ -4,6 +4,54 @@
 
 #include <Windows.h>
 
+void Trove_NormalizePath(char* path)
+{
+    while (*path)
+    {
+        *path++ = *path == '\\' ? '/' : *path;
+    }
+}
+
+void Trove_DenormalizePath(char* path)
+{
+    while (*path)
+    {
+        *path++ = *path == '/' ? '\\' : *path;
+    }
+}
+
+int Trove_CreateDirectory(const char* path)
+{
+    BOOL ok = ::CreateDirectoryA(path, NULL);
+    return ok;
+}
+
+int Trove_MoveFile(const char* source, const char* target)
+{
+    BOOL ok = ::MoveFileA(source, target);
+    return ok ? 1 : 0;
+}
+
+int Trove_IsDir(const char* path)
+{
+    DWORD attrs = ::GetFileAttributesA(path);
+    if (attrs == INVALID_FILE_ATTRIBUTES)
+    {
+        return 0;
+    }
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
+}
+
+int Trove_IsFile(const char* path)
+{
+    DWORD attrs = ::GetFileAttributesA(path);
+    if (attrs == INVALID_FILE_ATTRIBUTES)
+    {
+        return 0;
+    }
+    return (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
 struct Trove_FSIterator_private
 {
     WIN32_FIND_DATAA m_FindData;
@@ -118,21 +166,27 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
 {
     HANDLE h = (HANDLE)(handle);
-    ::SetFilePointer(h, (LONG)offset, 0, FILE_BEGIN);
+    LONG low = (LONG)(length & 0xffffffff);
+    LONG high = (LONG)(length >> 32);
+    ::SetFilePointer(h, low, &high, FILE_BEGIN);
     return TRUE == ::ReadFile(h, output, (LONG)length, 0, 0);
 }
 
 int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input)
 {
     HANDLE h = (HANDLE)(handle);
-    ::SetFilePointer(h, (LONG)offset, 0, FILE_BEGIN);
+    LONG low = (LONG)(length & 0xffffffff);
+    LONG high = (LONG)(length >> 32);
+    ::SetFilePointer(h, low, &high, FILE_BEGIN);
     return TRUE == ::WriteFile(h, input, (LONG)length, 0, 0);
 }
 
 uint64_t Trove_GetFileSize(HTroveOpenReadFile handle)
 {
     HANDLE h = (HANDLE)(handle);
-    return ::GetFileSize(h, 0);
+    DWORD high = 0;
+    DWORD low = ::GetFileSize(h, &high);
+    return (((uint64_t)high) << 32) + (uint64_t)low;
 }
 
 void Trove_CloseReadFile(HTroveOpenReadFile handle)
@@ -149,11 +203,17 @@ void Trove_CloseWriteFile(HTroveOpenWriteFile handle)
 
 const char* Trove_ConcatPath(const char* folder, const char* file)
 {
-    size_t path_len = strlen(folder) + 1 + strlen(file) + 1;
+    size_t folder_length = strlen(folder);
+    if (folder_length > 0 && folder[folder_length - 1] == '\\')
+    {
+        --folder_length;
+    }
+    size_t path_len = folder_length + 1 + strlen(file) + 1;
     char* path = (char*)malloc(path_len);
-    strcpy(path, folder);
-    strcat(path, "\\");
-    strcat(path, file);
+    
+    memmove(path, folder, folder_length);
+    path[folder_length] = '\\';
+    strcpy(&path[folder_length + 1], file);
     return path;
 }
 
@@ -166,6 +226,42 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+void Trove_NormalizePath(char* )
+{
+    // Nothing to do
+}
+
+void Trove_DenormalizePath(char* )
+{
+    // Nothing to do
+}
+
+int Trove_CreateDirectory(const char* path)
+{
+    return mkdir(path, 0700) == 0;
+}
+
+int Trove_MoveFile(const char* source, const char* target)
+{
+    return rename(source, target) == 0;
+}
+
+int Trove_IsDir(const char* path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISDIR(path_stat.st_mode);
+}
+
+int Trove_IsFile(const char* path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
 
 struct Trove_FSIterator_private
 {

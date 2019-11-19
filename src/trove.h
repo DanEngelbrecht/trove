@@ -7,6 +7,13 @@ typedef struct Trove_FSIterator_private* HTrove_FSIterator;
 
 size_t Trove_GetFSIteratorSize();
 
+void Trove_NormalizePath(char* path);
+void Trove_DenormalizePath(char* path);
+int Trove_CreateDirectory(const char* path);
+int Trove_MoveFile(const char* source, const char* target);
+int Trove_IsDir(const char* path);
+int Trove_IsFile(const char* path);
+
 int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path);
 int Trove_FindNext(HTrove_FSIterator fs_iterator);
 void Trove_CloseFind(HTrove_FSIterator fs_iterator);
