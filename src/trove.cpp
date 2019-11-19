@@ -166,9 +166,12 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
 {
     HANDLE h = (HANDLE)(handle);
-    LONG low = (LONG)(length & 0xffffffff);
-    LONG high = (LONG)(length >> 32);
-    ::SetFilePointer(h, low, &high, FILE_BEGIN);
+    LONG low = (LONG)(offset & 0xffffffff);
+    LONG high = (LONG)(offset >> 32);
+    if (INVALID_SET_FILE_POINTER == ::SetFilePointer(h, low, &high, FILE_BEGIN))
+    {
+        return 0;
+    }
     return TRUE == ::ReadFile(h, output, (LONG)length, 0, 0);
 }
 
