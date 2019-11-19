@@ -328,7 +328,13 @@ int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path)
         closedir(fs_iterator->m_DirStream);
         return 0;
     }
-    return Skip(fs_iterator);
+    int has_files = Skip(fs_iterator);
+    if (has_files)
+    {
+        return 1;
+    }
+    closedir(fs_iterator->m_DirStream);
+    return 0;
 }
 
 int Trove_FindNext(HTrove_FSIterator fs_iterator)
