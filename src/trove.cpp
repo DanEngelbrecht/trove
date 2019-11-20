@@ -153,14 +153,26 @@ HTroveOpenReadFile Trove_OpenReadFile(const char* path)
     return (HTroveOpenReadFile)handle;
 }
 
-HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
 {
-    HANDLE handle = ::CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    HANDLE handle = ::CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, 0, truncate ? CREATE_ALWAYS : OPEN_ALWAYS, 0, 0);
     if (handle == INVALID_HANDLE_VALUE)
     {
         return 0;
     }
     return (HTroveOpenWriteFile)handle;
+}
+
+int Trove_SetFileSize(HTroveOpenWriteFile handle, uint64_t length)
+{
+    HANDLE h = (HANDLE)(handle);
+    LONG low = (LONG)(length & 0xffffffff);
+    LONG high = (LONG)(length >> 32);
+    if (INVALID_SET_FILE_POINTER == ::SetFilePointer(h, low, &high, FILE_BEGIN))
+    {
+        return 0;
+    }
+    return TRUE == ::SetEndOfFile(h);
 }
 
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
@@ -216,7 +228,7 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
     }
     size_t path_len = folder_length + 1 + strlen(file) + 1;
     char* path = (char*)malloc(path_len);
-    
+
     memmove(path, folder, folder_length);
     path[folder_length] = '\\';
     strcpy(&path[folder_length + 1], file);
@@ -383,16 +395,25 @@ HTroveOpenReadFile Trove_OpenReadFile(const char* path)
     return (HTroveOpenReadFile)f;
 }
 
-HTroveOpenWriteFile Trove_OpenWriteFile(const char* path)
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
 {
-    FILE* f = fopen(path, "wb");
+    FILE* f = fopen(path, truncate ? "wb" : "ab");
     return (HTroveOpenWriteFile)f;
+}
+
+int Trove_SetFileSize(HTroveOpenReadFile handle, uint64_t length)
+{
+    FILE* f = (FILE*)handle;
+    return 0 == ftruncate(f, (off_t)length);
 }
 
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
 {
     FILE* f = (FILE*)handle;
-    fseek(f, (int)offset, SEEK_SET);
+    if (-1 == fseek(f, (long int)offset, SEEK_SET))
+    {
+        return 0;
+    }
     size_t read = fread(output, (size_t)length, 1, f);
     return read == 1u;
 }
@@ -400,7 +421,10 @@ int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void
 int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input)
 {
     FILE* f = (FILE*)handle;
-    fseek(f, (int)offset, SEEK_SET);
+    if (-1 == fseek(f, (long int )offset, SEEK_SET))
+    {
+        return 0;
+    }
     size_t written = fwrite(input, (size_t)length, 1, f);
     return written == 1u;
 }
@@ -408,7 +432,10 @@ int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, co
 uint64_t Trove_GetFileSize(HTroveOpenReadFile handle)
 {
     FILE* f = (FILE*)handle;
-    fseek(f, 0, SEEK_END);
+    if (-1 == fseek(f, 0, SEEK_END))
+    {
+        return 0;
+    }
     return (uint64_t)ftell(f);
 }
 
