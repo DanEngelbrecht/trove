@@ -17,21 +17,55 @@
 TEST(Nadir, IterateFolder)
 {
     HTrove_FSIterator iterator = (HTrove_FSIterator)alloca(Trove_GetFSIteratorSize());
-    if (Trove_StartFind(iterator, "."))
+    bool empty_folder_found = false;
+    bool something_folder_found = false;
+    bool something_10chars_found = false;
+    bool something_24hars_found = false;
+    if (Trove_StartFind(iterator, "./test_data"))
     {
         do
         {
             if (const char* filename = Trove_GetFileName(iterator))
             {
-                printf("\nFound file `%s`", filename);
+                if (0 == strcmpi(filename, "24chars.txt"))
+                {
+                    ASSERT_FALSE(something_24hars_found);
+                    something_24hars_found = true;
+                    ASSERT_EQ(24, Trove_GetEntrySize(iterator));
+                }
+                else
+                {
+                    printf("Found unexpected file: `%s`", filename);
+                    ASSERT_TRUE(false);
+                }
             }
             else if (const char* dirname = Trove_GetDirectoryName(iterator))
             {
-                printf("\nFound folder `%s`", dirname);
+                if (0 == strcmpi(dirname, "empty_folder"))
+                {
+                    ASSERT_FALSE(empty_folder_found);
+                    empty_folder_found = true;
+                    ASSERT_EQ(0, Trove_GetEntrySize(iterator));
+                }
+                else if (0 == strcmpi(dirname, "something_folder"))
+                {
+                    ASSERT_FALSE(something_folder_found);
+                    something_folder_found = true;
+                    ASSERT_EQ(0, Trove_GetEntrySize(iterator));
+                }
+                else
+                {
+                    printf("Found unexpected directory: `%s`", dirname);
+                    ASSERT_TRUE(false);
+                }
             }
         }while(Trove_FindNext(iterator));
         Trove_CloseFind(iterator);
     }
+    ASSERT_TRUE(empty_folder_found);
+    ASSERT_TRUE(something_folder_found);
+    ASSERT_FALSE(something_10chars_found);
+    ASSERT_TRUE(something_24hars_found);
 }
 
 TEST(Nadir, ReadFile)

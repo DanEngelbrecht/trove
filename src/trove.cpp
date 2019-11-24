@@ -143,6 +143,13 @@ const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator)
     return 0;
 }
 
+uint64_t Trove_GetEntrySize(HTrove_FSIterator fs_iterator)
+{
+    DWORD high = fs_iterator->m_FindData.nFileSizeHigh;
+    DWORD low = fs_iterator->m_FindData.nFileSizeLow;
+    return (((uint64_t)high) << 32) + (uint64_t)low;
+}
+
 HTroveOpenReadFile Trove_OpenReadFile(const char* path)
 {
     HANDLE handle = ::CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
@@ -283,6 +290,7 @@ int Trove_IsFile(const char* path)
 
 struct Trove_FSIterator_private
 {
+    char* m_DirPath;
     DIR* m_DirStream;
     struct dirent * m_DirEntry;
 };
@@ -334,9 +342,11 @@ static int Skip(HTrove_FSIterator fs_iterator)
 
 int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path)
 {
+    fs_iterator->m_DirPath = strdup(path);
     fs_iterator->m_DirStream = opendir(path);
     if (0 == fs_iterator->m_DirStream)
     {
+        free(fs_iterator->m_DirPath);
         return 0;
     }
 
@@ -344,6 +354,7 @@ int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path)
     if (fs_iterator->m_DirEntry == 0)
     {
         closedir(fs_iterator->m_DirStream);
+        free(fs_iterator->m_DirPath);
         return 0;
     }
     int has_files = Skip(fs_iterator);
@@ -352,6 +363,7 @@ int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path)
         return 1;
     }
     closedir(fs_iterator->m_DirStream);
+    free(fs_iterator->m_DirPath);
     return 0;
 }
 
@@ -369,6 +381,8 @@ void Trove_CloseFind(HTrove_FSIterator fs_iterator)
 {
     closedir(fs_iterator->m_DirStream);
     fs_iterator->m_DirStream = 0;
+    free(fs_iterator->m_DirPath);
+    fs_iterator->m_DirPath = 0;
 }
 
 const char* Trove_GetFileName(HTrove_FSIterator fs_iterator)
@@ -387,6 +401,26 @@ const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator)
         return 0;
     }
     return fs_iterator->m_DirEntry->d_name;
+}
+
+uint64_t Trove_GetEntrySize(HTrove_FSIterator fs_iterator)
+{
+    if (fs_iterator->m_DirEntry->d_type != DT_REG)
+    {
+        return 0;
+    }
+    size_t dir_len = strlen(fs_iterator->m_DirPath);
+    size_t file_len = strlen(fs_iterator->m_DirEntry->d_name);
+    char* path = dir_len + 1 + file_len + 1;
+    memcpy(&path[0], fs_iterator->m_DirPath, dir_len);
+    path[dir_len] = '/';
+    memcpy(&path[dir_len + 1], fs_iterator->m_DirEntry->d_name, file_len);
+    path[dir_len + 1 + file_len] = '\0';
+    struct stat stat_buf;
+    int ok = stat(path, &stat_buf);
+    uint64_t size = ok ? (uint64_t)stat_buf.st_size : 0;
+    free(path);
+    return size;
 }
 
 HTroveOpenReadFile Trove_OpenReadFile(const char* path)

@@ -19,6 +19,7 @@ int Trove_FindNext(HTrove_FSIterator fs_iterator);
 void Trove_CloseFind(HTrove_FSIterator fs_iterator);
 const char* Trove_GetFileName(HTrove_FSIterator fs_iterator);
 const char* Trove_GetDirectoryName(HTrove_FSIterator fs_iterator);
+uint64_t Trove_GetEntrySize(HTrove_FSIterator fs_iterator);
 
 typedef struct Trove_OpenReadFile_private* HTroveOpenReadFile;
 typedef struct Trove_OpenWriteFile_private* HTroveOpenWriteFile;
