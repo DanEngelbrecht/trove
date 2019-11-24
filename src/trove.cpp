@@ -435,10 +435,10 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
     return (HTroveOpenWriteFile)f;
 }
 
-int Trove_SetFileSize(HTroveOpenReadFile handle, uint64_t length)
+int Trove_SetFileSize(HTroveOpenWriteFile handle, uint64_t length)
 {
     FILE* f = (FILE*)handle;
-    return 0 == ftruncate(f, (off_t)length);
+    return 0 == ftruncate(fileno(f), (off_t)length);
 }
 
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
