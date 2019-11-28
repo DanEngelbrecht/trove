@@ -411,14 +411,14 @@ uint64_t Trove_GetEntrySize(HTrove_FSIterator fs_iterator)
     }
     size_t dir_len = strlen(fs_iterator->m_DirPath);
     size_t file_len = strlen(fs_iterator->m_DirEntry->d_name);
-    char* path = dir_len + 1 + file_len + 1;
+    char* path = (char*)malloc(dir_len + 1 + file_len + 1);
     memcpy(&path[0], fs_iterator->m_DirPath, dir_len);
     path[dir_len] = '/';
     memcpy(&path[dir_len + 1], fs_iterator->m_DirEntry->d_name, file_len);
     path[dir_len + 1 + file_len] = '\0';
     struct stat stat_buf;
     int ok = stat(path, &stat_buf);
-    uint64_t size = ok ? (uint64_t)stat_buf.st_size : 0;
+    uint64_t size = ok ? 0 : (uint64_t)stat_buf.st_size;
     free(path);
     return size;
 }

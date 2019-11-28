@@ -1,6 +1,6 @@
 #include "../src/trove.h"
 
-#include <memory>
+#include <memory.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -27,7 +27,7 @@ TEST(Nadir, IterateFolder)
         {
             if (const char* filename = Trove_GetFileName(iterator))
             {
-                if (0 == strcmpi(filename, "24chars.txt"))
+                if (0 == strcmp(filename, "24chars.txt"))
                 {
                     ASSERT_FALSE(something_24hars_found);
                     something_24hars_found = true;
@@ -41,13 +41,13 @@ TEST(Nadir, IterateFolder)
             }
             else if (const char* dirname = Trove_GetDirectoryName(iterator))
             {
-                if (0 == strcmpi(dirname, "empty_folder"))
+                if (0 == strcmp(dirname, "empty_folder"))
                 {
                     ASSERT_FALSE(empty_folder_found);
                     empty_folder_found = true;
                     ASSERT_EQ(0, Trove_GetEntrySize(iterator));
                 }
-                else if (0 == strcmpi(dirname, "something_folder"))
+                else if (0 == strcmp(dirname, "something_folder"))
                 {
                     ASSERT_FALSE(something_folder_found);
                     something_folder_found = true;
