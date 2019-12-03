@@ -253,6 +253,7 @@ const char* Trove_ConcatPath(const char* folder, const char* file)
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 void Trove_NormalizePath(char* )
 {
@@ -266,26 +267,64 @@ void Trove_DenormalizePath(char* )
 
 int Trove_CreateDirectory(const char* path)
 {
-    return mkdir(path, 0700) == 0;
+    int err = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (err == 0)
+    {
+        return 1;
+    }
+    int e = errno;
+    if (e == EEXIST)
+    {
+        return 1;
+    }
+    printf("Can't create directory `%s`: %d\n", path, e);
+    return 0;
 }
 
 int Trove_MoveFile(const char* source, const char* target)
 {
-    return rename(source, target) == 0;
+    int err = rename(source, target);
+    if (err == 0)
+    {
+        return 1;
+    }
+    int e = errno;
+    printf("Can't move `%s` to `%s`: %d\n", source, target, e);
+    return 0;
 }
 
 int Trove_IsDir(const char* path)
 {
     struct stat path_stat;
-    stat(path, &path_stat);
-    return S_ISDIR(path_stat.st_mode);
+    int err = stat(path, &path_stat);
+    if (0 == err)
+    {
+        return S_ISDIR(path_stat.st_mode);
+    }
+    int e = errno;
+    if (ENOENT == e)
+    {
+        return 0;
+    }
+    printf("Can't determine type of `%s`: %d\n", path, e);
+    return 0;
 }
 
 int Trove_IsFile(const char* path)
 {
     struct stat path_stat;
-    stat(path, &path_stat);
-    return S_ISREG(path_stat.st_mode);
+    int err = stat(path, &path_stat);
+    if (0 == err)
+    {
+        return S_ISREG(path_stat.st_mode);
+    }
+    int e = errno;
+    if (ENOENT == e)
+    {
+        return 0;
+    }
+    printf("Can't determine type of `%s`: %d\n", path, e);
+    return 0;
 }
 
 struct Trove_FSIterator_private
@@ -438,7 +477,22 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
 int Trove_SetFileSize(HTroveOpenWriteFile handle, uint64_t length)
 {
     FILE* f = (FILE*)handle;
-    return 0 == ftruncate(fileno(f), (off_t)length);
+    fflush(f);
+    int err = ftruncate(fileno(f), (off_t)length);
+    if (err == 0)
+    {
+        fflush(f);
+        uint64_t verify_size = Trove_GetFileSize((HTroveOpenReadFile)handle);
+        if (verify_size != length)
+        {
+            printf("Truncate did not set the correct size of `%ld`\n", (off_t)length);
+            return 0;
+        }
+        return 1;
+    }
+    int e = errno;
+    printf("Can't truncate to `%ld`: %d\n", (off_t)length, e);
+    return 0;
 }
 
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output)
@@ -482,6 +536,7 @@ void Trove_CloseReadFile(HTroveOpenReadFile handle)
 void Trove_CloseWriteFile(HTroveOpenWriteFile handle)
 {
     FILE* f = (FILE*)handle;
+    fflush(f);
     fclose(f);
 }
 
