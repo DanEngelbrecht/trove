@@ -160,13 +160,30 @@ HTroveOpenReadFile Trove_OpenReadFile(const char* path)
     return (HTroveOpenReadFile)handle;
 }
 
-HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, uint64_t initial_size)
 {
-    HANDLE handle = ::CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, 0, truncate ? CREATE_ALWAYS : OPEN_ALWAYS, 0, 0);
+    HANDLE handle = ::CreateFileA(path, GENERIC_READ | GENERIC_WRITE, 0, 0, initial_size == 0 ? CREATE_ALWAYS : OPEN_ALWAYS, 0, 0);
     if (handle == INVALID_HANDLE_VALUE)
     {
         return 0;
     }
+
+    if (initial_size > 0)
+    {
+        LONG low = (LONG)(initial_size & 0xffffffff);
+        LONG high = (LONG)(initial_size >> 32);
+        if (INVALID_SET_FILE_POINTER == ::SetFilePointer(h, low, &high, FILE_BEGIN))
+        {
+            ::CloseHandle(handle);
+            return 0;
+        }
+        if(FALSE == ::SetEndOfFile(handle))
+        {
+            ::CloseHandle(handle);
+            return 0;
+        }
+    }
+
     return (HTroveOpenWriteFile)handle;
 }
 
@@ -468,9 +485,34 @@ HTroveOpenReadFile Trove_OpenReadFile(const char* path)
     return (HTroveOpenReadFile)f;
 }
 
-HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate)
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, uint64_t initial_size)
 {
-    FILE* f = fopen(path, truncate ? "wb" : "ab");
+    FILE* f = fopen(path, initial_size == 0 ? "wb" : "rb+");
+    if (!f)
+    {
+        int e = errno;
+        printf("Can't open file `%s` with attributes `%s`: %d\n", path, initial_size == 0 ? "wb" : "rb+", e);
+        return 0;
+    }
+    if  (initial_size > 0)
+    {
+        int err = ftruncate64(fileno(f), initial_size);
+        if (err != 0)
+        {
+            int e = errno;
+            printf("Can't truncate file `%s` to `%ld`: %d\n", path, (off64_t)initial_size, e);
+            fclose(f);
+            return 0;
+        }
+/*        err = fsync(fileno(f));
+        if (err != 0)
+        {
+            int e = errno;
+            printf("Can't fsync file `%s`: %d\n", path, e);
+            fclose(f);
+            return 0;
+        }*/
+    }
     return (HTroveOpenWriteFile)f;
 }
 

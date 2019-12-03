@@ -25,7 +25,7 @@ typedef struct Trove_OpenReadFile_private* HTroveOpenReadFile;
 typedef struct Trove_OpenWriteFile_private* HTroveOpenWriteFile;
 
 HTroveOpenReadFile Trove_OpenReadFile(const char* path);
-HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, int truncate);
+HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, uint64_t initial_size);
 int Trove_SetFileSize(HTroveOpenWriteFile handle, uint64_t length);
 int Trove_Read(HTroveOpenReadFile handle, uint64_t offset, uint64_t length, void* output);
 int Trove_Write(HTroveOpenWriteFile handle, uint64_t offset, uint64_t length, const void* input);
