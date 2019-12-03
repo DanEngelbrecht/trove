@@ -172,7 +172,7 @@ HTroveOpenWriteFile Trove_OpenWriteFile(const char* path, uint64_t initial_size)
     {
         LONG low = (LONG)(initial_size & 0xffffffff);
         LONG high = (LONG)(initial_size >> 32);
-        if (INVALID_SET_FILE_POINTER == ::SetFilePointer(h, low, &high, FILE_BEGIN))
+        if (INVALID_SET_FILE_POINTER == ::SetFilePointer(handle, low, &high, FILE_BEGIN))
         {
             ::CloseHandle(handle);
             return 0;
