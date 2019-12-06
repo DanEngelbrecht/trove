@@ -52,6 +52,18 @@ int Trove_IsFile(const char* path)
     return (attrs & FILE_ATTRIBUTE_DIRECTORY) == 0;
 }
 
+int Trove_RemoveDir(const char* path)
+{
+    int ok = ::RemoveDirectoryA(path) == TRUE;
+    return ok;
+}
+
+int Trove_RemoveFile(const char* path)
+{
+    int ok = ::DeleteFileA(path) == TRUE;
+    return ok;
+}
+
 struct Trove_FSIterator_private
 {
     WIN32_FIND_DATAA m_FindData;
@@ -342,6 +354,18 @@ int Trove_IsFile(const char* path)
     }
     printf("Can't determine type of `%s`: %d\n", path, e);
     return 0;
+}
+
+int Trove_RemoveDir(const char* path)
+{
+    int ok = rmdir(path) == 0;
+    return ok;
+}
+
+int Trove_RemoveFile(const char* path)
+{
+    int ok = unlink(path) == 0;
+    return ok;
 }
 
 struct Trove_FSIterator_private

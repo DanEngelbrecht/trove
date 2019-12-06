@@ -13,6 +13,8 @@ int Trove_CreateDirectory(const char* path);
 int Trove_MoveFile(const char* source, const char* target);
 int Trove_IsDir(const char* path);
 int Trove_IsFile(const char* path);
+int Trove_RemoveDir(const char* path);
+int Trove_RemoveFile(const char* path);
 
 int Trove_StartFind(HTrove_FSIterator fs_iterator, const char* path);
 int Trove_FindNext(HTrove_FSIterator fs_iterator);
